@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using RestSharp;
+using DropNet.Extensions;
 
 namespace DropNet.Helpers
 {
+    /// <summary>
+    /// Helper class for creating DropNet RestSharp Requests
+    /// </summary>
     public class RequestHelper
-    {
-       
+    {       
         private string _version;
 
         public RequestHelper(string version)
@@ -44,8 +47,8 @@ namespace DropNet.Helpers
             request.AddParameter("path", path, ParameterType.UrlSegment);
             //Need to add the "file" parameter with the file name
             request.AddParameter("file", filename);
-
-            request.AddFile(fileData, filename, "file");
+			
+            request.AddFile("file", fileData, filename);
 
             return request;
         }
@@ -139,6 +142,7 @@ namespace DropNet.Helpers
 
             return request;
         }
+
 
     }
 }

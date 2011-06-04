@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Ploeh.AutoFixture;
+using DropNet.Exceptions;
 
 namespace DropNet.Tests
 {
@@ -13,12 +14,12 @@ namespace DropNet.Tests
     {
         DropNetClient _client;
         Fixture fixture;
+
         public FileTests()
         {
-            //
-            // TODO: Add constructor logic here
-            //
             _client = new DropNetClient(TestVariables.ApiKey, TestVariables.ApiSecret);
+            _client.Login(TestVariables.Email, TestVariables.Password);
+
             fixture = new Fixture();
         }
 
@@ -63,9 +64,17 @@ namespace DropNet.Tests
         #endregion
 
         [TestMethod]
+        public void Can_Get_MetaData_With_Special_Char()
+        {
+            var fileInfo = _client.GetMetaData("/Temp/test'.txt");
+            
+            Assert.IsNotNull(fileInfo);
+        }
+
+
+        [TestMethod]
         public void Can_Get_File()
         {
-            _client.Login(TestVariables.Email, TestVariables.Password);
             var fileInfo = _client.GetFile("/Getting Started.rtf");
 
             Assert.IsNotNull(fileInfo);
@@ -74,10 +83,9 @@ namespace DropNet.Tests
         [TestMethod]
         public void Can_Get_File_And_Save()
         {
-            _client.Login(TestVariables.Email, TestVariables.Password);
-            var fileInfo = _client.GetFile("/Temp/ScreenShot11.Png");
+            var fileInfo = _client.GetFile("/Getting Started.rtf");
 
-            var writeStream = new FileStream("C:\\Temp\\ScreenShot11.Png", FileMode.Create, FileAccess.Write);
+            var writeStream = new FileStream("C:\\Temp\\Getting Started.rtf", FileMode.Create, FileAccess.Write);
 
             writeStream.Write(fileInfo, 0, fileInfo.Length);
             writeStream.Close();
@@ -88,8 +96,6 @@ namespace DropNet.Tests
         [TestMethod]
         public void Can_Upload_File()
         {
-            _client.Login(TestVariables.Email, TestVariables.Password);
-
             var localFile = new FileInfo(fixture.CreateAnonymous<string>());
             var localContent = fixture.CreateAnonymous<string>();
 
@@ -104,10 +110,29 @@ namespace DropNet.Tests
         }
 
         [TestMethod]
+        public void Can_Upload_Large_File()
+        {
+            var localFile = new FileInfo(fixture.CreateAnonymous<string>());
+            var localContent = fixture.CreateAnonymous<string>();
+
+            for (int i = 0; i < 16; i++)
+            {
+                localContent += localContent;
+            }
+
+            File.WriteAllText(localFile.FullName, localContent, System.Text.Encoding.UTF8);
+            Assert.IsTrue(File.Exists(localFile.FullName));
+            byte[] content = _client.GetFileContentFromFS(localFile);
+
+            var uploaded = _client.UploadFile("/", localFile.Name, content);
+
+            Assert.IsTrue(uploaded);
+            File.Delete(localFile.FullName);
+        }
+
+        [TestMethod]
         public void Can_Upload_File_Async()
         {
-            _client.Login(TestVariables.Email, TestVariables.Password);
-
             var localFile = new FileInfo(fixture.CreateAnonymous<string>());
             var localContent = fixture.CreateAnonymous<string>();
 
@@ -115,20 +140,52 @@ namespace DropNet.Tests
             Assert.IsTrue(File.Exists(localFile.FullName));
             byte[] content = _client.GetFileContentFromFS(localFile);
 
-            _client.UploadFileAsync("/", localFile.Name, content, Can_Upload_File_Async_Callback);
+            _client.UploadFileAsync("/", localFile.Name, content, Can_Upload_File_Async_Success, Can_Upload_File_Async_Failure);
 
             //TODO - Delete
         }
 
-        private void Can_Upload_File_Async_Callback(RestSharp.RestResponse response)
+        private void Can_Upload_File_Async_Success(RestSharp.RestResponse response)
         {
             Assert.IsTrue(response.StatusCode == System.Net.HttpStatusCode.OK);
+        }
+        private void Can_Upload_File_Async_Failure(DropboxException error)
+        {
+            Assert.IsTrue(false);
+        }
+
+        [TestMethod]
+        public void Can_Upload_Large_File_Async()
+        {
+            var localFile = new FileInfo(fixture.CreateAnonymous<string>());
+            var localContent = fixture.CreateAnonymous<string>();
+
+            for (int i = 0; i < 16; i++)
+            {
+                localContent += localContent;
+            }
+
+            File.WriteAllText(localFile.FullName, localContent, System.Text.Encoding.UTF8);
+            Assert.IsTrue(File.Exists(localFile.FullName));
+            byte[] content = _client.GetFileContentFromFS(localFile);
+
+            _client.UploadFileAsync("/", localFile.Name, content, Can_Upload_Large_File_Async_Success, Can_Upload_Large_File_Async_Failure);
+
+            //TODO - Delete
+        }
+
+        private void Can_Upload_Large_File_Async_Success(RestSharp.RestResponse response)
+        {
+            Assert.IsTrue(response.StatusCode == System.Net.HttpStatusCode.OK);
+        }
+        private void Can_Upload_Large_File_Async_Failure(DropboxException error)
+        {
+            Assert.IsTrue(false);
         }
 
         [TestMethod]
         public void Can_Delete_File()
         {
-            _client.Login(TestVariables.Email, TestVariables.Password);
             var deleted = _client.Delete("/Test.txt");
 
             Assert.IsNotNull(deleted);
@@ -137,7 +194,6 @@ namespace DropNet.Tests
         [TestMethod]
         public void Can_Get_MetaData()
         {
-            _client.Login(TestVariables.Email, TestVariables.Password);
             var metaData = _client.GetMetaData("/Public");
 
             Assert.IsNotNull(metaData);
@@ -147,7 +203,6 @@ namespace DropNet.Tests
         [TestMethod]
         public void Can_Get_MetaData_Root()
         {
-            _client.Login(TestVariables.Email, TestVariables.Password);
             var metaData = _client.GetMetaData();
 
             Assert.IsNotNull(metaData);
@@ -157,7 +212,6 @@ namespace DropNet.Tests
         [TestMethod]
         public void Can_Create_Folder()
         {
-            _client.Login(TestVariables.Email, TestVariables.Password);
             var metaData = _client.CreateFolder("TestFolder1");
 
             Assert.IsNotNull(metaData);

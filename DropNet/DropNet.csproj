@@ -51,8 +51,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\Lib\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json.Net35, Version=4.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\Lib\Newtonsoft.Json.Net35.dll</HintPath>
     </Reference>
     <Reference Include="RestSharp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -61,19 +61,26 @@
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Authenticators\OAuthAuthenticator.cs" />
+    <Compile Include="Authenticators\OAuthAuthenticator.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Client\Client.cs" />
+    <Compile Include="Client\RestHttp.Sync.cs" />
+    <Compile Include="Client\RestHttp.Async.cs" />
+    <Compile Include="Client\RestHttp.cs" />
     <Compile Include="Client\User.Async.cs" />
     <Compile Include="Client\Files.Async.cs" />
     <Compile Include="Client\Files.Sync.cs" />
     <Compile Include="Client\User.Sync.cs" />
     <Compile Include="Exceptions\DropboxException.cs" />
+    <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Helpers\RequestHelper.cs" />
     <Compile Include="Models\AccountCreationResult.cs" />
     <Compile Include="Models\AccountInfo.cs" />
@@ -81,11 +88,6 @@
     <Compile Include="Models\DropNetResult.cs" />
     <Compile Include="Models\UserLogin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Resource.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resource.resx</DependentUpon>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
@@ -107,12 +109,7 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Resource.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resource.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
